@@ -1,8 +1,6 @@
 const dateformat = require('dateformat');
 const config = require("config");
 const conf = config.get("kinrou");
-console.log(conf);
-
 
 const puppeteer = require('puppeteer');
 (async() => {
@@ -34,7 +32,7 @@ const puppeteer = require('puppeteer');
     const month = dateformat(d, 'mm');
     const kijunDate = dateformat(d, 'yyyymmdd');
 
-    await page.goto(`https://kinrou.sas-cloud.jp/kinrou/dakokuList/index?syainCode=${kinrouConfig.userId}&year=${year}&month=${month}&kijunDate=${kijunDate}`);
+    await page.goto(`https://kinrou.sas-cloud.jp/kinrou/dakokuList/index?syainCode=${conf.userId}&year=${year}&month=${month}&kijunDate=${kijunDate}`);
 
     let elms = await page.$$(".dakoku-all-list tr");
     let elm;
