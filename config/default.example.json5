@@ -1,0 +1,20 @@
+{
+    "green": {
+        "url" : "https://www.green-japan.com/client/login",
+        "userid": "",
+        "password": "",
+        "search": "",
+        "waitShort": 5000,
+        "waitLong": 10000,
+        "headless":true ,
+    },
+    "kinrou": {
+        "houjinCode" : "",
+        "userId"     : "",
+        "password"   : "",
+        "url"        : "https://kinrou.sas-cloud.jp/kinrou/kojin/",
+        "headless"  : true,
+    }
+
+}
+
