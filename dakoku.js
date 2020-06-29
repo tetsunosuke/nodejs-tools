@@ -9,6 +9,7 @@ const puppeteer = require('puppeteer');
     });
     // よく使うものは先に宣言しておくといいかも
     let text;
+    let elm;
 
     const [page] = await browser.pages();
     // トップページ
@@ -25,7 +26,18 @@ const puppeteer = require('puppeteer');
     ]);
 
     // 打刻
-    await page.click("[name='dakoku']");
+    try {
+        await page.click("[name='dakoku']");
+    } catch (error) {
+        await Promise.all([
+            page.waitForSelector("#error"),
+            elm = await page.$("#error")
+        ]);
+        text = await page.evaluate(elm => elm.textContent, elm)
+        console.log(text);
+        await browser.close();
+        return;
+    }
 
     const d = new Date();
     const year = dateformat(d, 'yyyy');
@@ -35,7 +47,6 @@ const puppeteer = require('puppeteer');
     await page.goto(`https://kinrou.sas-cloud.jp/kinrou/dakokuList/index?syainCode=${conf.userId}&year=${year}&month=${month}&kijunDate=${kijunDate}`);
 
     let elms = await page.$$(".dakoku-all-list tr");
-    let elm;
     text = "最後の打刻は：";
     for (i of [3,4]) {
         elm = await page.$(`.dakoku-all-list tr:nth-of-type(${elms.length-1}) td:nth-of-type(${i})`);
