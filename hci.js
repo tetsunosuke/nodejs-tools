@@ -1,3 +1,5 @@
+// node hci sp "山田 太郎" 男性 中途
+//
 const config = require("config");
 let conf = config.get("hci");
 const puppeteer = require('puppeteer');
@@ -9,7 +11,7 @@ generateYmd = () => {
     // 一週間後の日付を指定する
     let d = new Date();
     d.setDate(d.getDate() + 7);
-    return [d.getYear() + 1900 + "", d.getMonth() + 1 + "", d.getDay() + ""];
+    return [d.getYear() + 1900 + "", d.getMonth() + 1 + "", d.getDate() + ""];
 };
 
 // configのtemp変数
