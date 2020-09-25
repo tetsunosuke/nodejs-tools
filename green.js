@@ -35,7 +35,13 @@ const puppeteer = require('puppeteer');
 
     // TODO: アンケートが出た場合は閉じる必要がある
     // elector: div#wrapper div.dialog_close.js-create_cookie
-    //
+    // パスワード変更
+    if (await page.url() === "https://www.green-japan.com/client/settings/edit_password") {
+        console.info("パスワード変更が求められました");
+        await page.goto(conf.url);
+    }
+
+
     // 求職者検索ボタンをクリック
     await Promise.all([
         page.waitForNavigation(),
