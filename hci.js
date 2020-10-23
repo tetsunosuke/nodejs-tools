@@ -145,5 +145,19 @@ conf = c;
     await page.click(selector);
 
     // TODO: 別ページで開いたやつから中身を抜き出す
-    // browser.close();
+
+    await page.waitFor(2000);
+    let pages = await browser.pages();
+    // 新規ページはpages[1]
+    const data = await pages[1].evaluate( (selector) => {
+        const personalData = document.querySelector(selector);
+        const tds = personalData.querySelectorAll("td");
+        let lines = [];
+        for (let i=0; i < tds.length; i+=2) {
+            lines.push(`${tds[i].textContent} : ${tds[i+1].textContent}`);
+        }
+        return lines;
+    }, ".personal_data");
+    console.info(data.join("\n"));
+    browser.close();
 })();
