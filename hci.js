@@ -41,7 +41,6 @@ if (process.argv.length >= 6) {
     var [node, prog, type, applicantName, genderText, applicantTypeText, ymd] = process.argv;
     if (typeof ymd !== "undefined") {
         [yyyy, mm, dd]  = separateYmd(ymd);
-        console.log(yyyy, mm, dd);
     }
     let account = conf.get(type);
     for (key in account) {
@@ -51,7 +50,7 @@ if (process.argv.length >= 6) {
     gender = genderText.match(/男/) ? "1" : "2";
     applicantType = applicantTypeText.match(/新卒/) ? "1" : "2";
 } else {
-    throw("オプションを指定してください: node hci 識別子 氏名 新卒/中途 男性/女性 (YYYY/MM/DD) ");
+    throw("オプションを指定してください: node hci task名 氏名 新卒/中途 男性/女性 (YYYY/MM/DD) ");
 }
 
 // 戻す
