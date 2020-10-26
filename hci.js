@@ -1,5 +1,6 @@
-// node hci sp "山田 太郎" 男性 中途
-//
+// node hci sp "山田 太郎" 男性 中途 (2020/3/29)
+// ※日付は指定しない場合は期限一週間で自動設定
+
 const config = require("config");
 let conf = config.get("hci");
 const puppeteer = require('puppeteer');
@@ -7,11 +8,24 @@ const puppeteer = require('puppeteer');
 let gender;
 let applicantType;
 
-generateYmd = () => {
+const generateYmd = () => {
     // 一週間後の日付を指定する
     let d = new Date();
     d.setDate(d.getDate() + 7);
     return [d.getYear() + 1900 + "", d.getMonth() + 1 + "", d.getDate() + ""];
+};
+
+const separateYmd = (ymd) => {
+    const [y, m, d] = ymd.split("/");
+    if (typeof y === "undefined" || typeof m === "undefined" || typeof d === "undefined") {
+        throw new Error("日付の指定が不正です（フォーマットが YYYY/MM/DD ではありません");
+    }
+    const date = new Date(y-0, m-1, d-0);
+    if (date <= new Date()) {
+        throw new Error("日付の指定が不正です（存在しない日付か、過去の日付になっています");
+    }
+
+    return [y, m, d];
 };
 
 // configのtemp変数
@@ -24,7 +38,11 @@ for (let key in conf) {
 
 let [yyyy, mm, dd] = generateYmd();
 if (process.argv.length >= 6) {
-    var [node, prog, type, applicantName, genderText, applicantTypeText, ] = process.argv;
+    var [node, prog, type, applicantName, genderText, applicantTypeText, ymd] = process.argv;
+    if (typeof ymd !== "undefined") {
+        [yyyy, mm, dd]  = separateYmd(ymd);
+        console.log(yyyy, mm, dd);
+    }
     let account = conf.get(type);
     for (key in account) {
         c[key] = account[key];
@@ -33,7 +51,7 @@ if (process.argv.length >= 6) {
     gender = genderText.match(/男/) ? "1" : "2";
     applicantType = applicantTypeText.match(/新卒/) ? "1" : "2";
 } else {
-    throw("オプションを指定してください");
+    throw("オプションを指定してください: node hci 識別子 氏名 新卒/中途 男性/女性 (YYYY/MM/DD) ");
 }
 
 // 戻す
@@ -144,8 +162,7 @@ conf = c;
     await page.waitForSelector(selector);
     await page.click(selector);
 
-    // TODO: 別ページで開いたやつから中身を抜き出す
-
+    // 別ページで開いたやつから中身を抜き出す
     await page.waitFor(2000);
     let pages = await browser.pages();
     // 新規ページはpages[1]
@@ -158,6 +175,7 @@ conf = c;
         }
         return lines;
     }, ".personal_data");
+    data.push(`受検期限は ${yyyy}/${mm}/${dd} です`);
     console.info(data.join("\n"));
     browser.close();
 })();
