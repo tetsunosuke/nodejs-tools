@@ -106,7 +106,7 @@ const puppeteer = require('puppeteer');
     await page.click(selector);
 
     // 絞り込み検索でそこそこかかるので待つ
-    await page.waitFor(10000);
+    await page.waitFor(5000);
 
     // あしあと：0日前(（〜）」の求人）
     // ↑のように出るので、その求人に紐付けて気になるをしていく
@@ -116,23 +116,27 @@ const puppeteer = require('puppeteer');
     elm = await page.$("#js-react-search-result>span");
     value = await (await elm.getProperty('textContent')).jsonValue()
     let found = value.split(" ")[2];
+    console.info(`${value}件のあしあとがあります`);
+    // status のリクエストがかなり重たいので待つ
+    await page.waitFor(30000);
 
     // 検索結果の気になるをクリックして該当求人へ紐付けていく
     for (let i=1; i < found-0; i++) {
         selector = `#js-main-contents table>tbody:nth-of-type(${i})>tr>td:nth-of-type(9)>div.mdl-data-table__actions>div>span`;
         elm = await page.$(selector);
         value = await (await elm.getProperty('textContent')).jsonValue()
+        // すでに気になる送信済み/気になる受信済みは除く
         if (value === "list") {
             selector = `#js-main-contents table>tbody:nth-of-type(${i})`;
-            page.hover(selector);
+            await page.hover(selector);
             elm = await page.$(selector);
             value = await (await elm.getProperty('textContent')).jsonValue()
-            const regExp = /あしあと：\d日前\(（(.*)」の求人）/;
+            const regExp = /あしあと：\d+日前\(（(.*)」の求人）/;
             const match = value.match(regExp);
             if (match === null) {
                 continue;
             }
-            console.log(i, match[1]);
+            console.log("マッチしました...気になるを送ります", i, match[1]);
             selector = `#js-main-contents table>tbody:nth-of-type(${i})>tr>td:nth-of-type(9)>div.mdl-data-table__actions>div>i`;
             await page.waitForSelector(selector);
             await page.hover(selector);
@@ -142,6 +146,7 @@ const puppeteer = require('puppeteer');
                 value = await (await elms[j].getProperty('textContent')).jsonValue()
                 if (match[1] ===  value) {
                     selector = `#js-main-contents table>tbody:nth-of-type(${i})>tr>td:nth-of-type(9)>div.mdl-data-table__actions>div>div>ul>li:nth-of-type(${j+1})`;
+                    await page.waitForSelector(selector);
                     await page.click(selector);
                     continue;
                 }
