@@ -75,7 +75,23 @@ const dateformat = require("dateformat");
         await page.waitFor(500);
     }
     // 今日の日付でリネーム
-    fs.rename(downloadFileName, dateformat(new Date(), 'yyyy-mm-dd') + ".csv", (err) => {});
+    fs.rename(downloadFileName, "mobileknowledge/" + dateformat(new Date(), 'yyyy-mm-dd') + ".csv", (err) => {});
+
+    // フィード
+    await Promise.all([
+        page.waitForNavigation(),
+        page.goto("https://mobileknowledge.jp/admin/emulator?service_category_id=1000001799&group_id=1000006616")
+    ]);
+
+    // 実態はiframeに存在する
+    const [parent, frame] = await page.frames()
+    selector = "#comment>section>.header>.inner-r>p";
+    await frame.waitForSelector(selector);
+    elms = await frame.$$(selector);
+    text = "最終更新:";
+    text += await frame.evaluate(elm => elm.textContent, elms[0]);
+    text += "(" + await frame.evaluate(elm => elm.textContent, elms[1]) + ")";
+    console.info(text);
 
     browser.close();
 
