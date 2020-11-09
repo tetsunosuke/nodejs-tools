@@ -4,6 +4,12 @@ const puppeteer = require('puppeteer');
 const contentDisposition = require('content-disposition');
 const fs = require("fs");
 const dateformat = require("dateformat");
+const sqlite3 = require("sqlite3");
+const csvFolderName = "mobileknowledge";
+const parse = require("csv-parse");
+const iconv = require('iconv-lite');
+
+
 
 (async () => {
     let selector;
@@ -75,7 +81,45 @@ const dateformat = require("dateformat");
         await page.waitFor(500);
     }
     // 今日の日付でリネーム
-    fs.rename(downloadFileName, "mobileknowledge/" + dateformat(new Date(), 'yyyy-mm-dd') + ".csv", (err) => {});
+    const downloadedFileName = csvFolderName + "/" + dateformat(new Date(), 'yyyy-mm-dd') + ".csv";
+    fs.rename(downloadFileName, downloadedFileName, (err) => {});
+
+    // ダウンロードしたファイルの内容をDBへインサート
+    const parser = parse();
+
+    const rs = fs.createReadStream(downloadedFileName);
+    rs.pipe(iconv.decodeStream('SJIS'))
+      .pipe(iconv.encodeStream('UTF-8'))
+      .pipe(parser);
+
+    // DBに入れていく
+    parser.on('readable', () => {
+      let data;
+      while (data = parser.read()) {
+        [tmp, name, a, ,b, rate, cleared, achivement, answer_rate, last_login] = data;
+          if (a === "for Freshers21") {
+              const db = new sqlite3.Database("mobileknowledge.sqlite3")
+              try {
+                  db.serialize(() => {
+                      db.run(`create table if not exists mobileknowledge (
+                        check_time datetime,
+                        name text,
+                        rate number,
+                        cleared number,
+                        achivement number,
+                        answer_rate number,
+                        last_login datetime)`);
+                      db.run(`insert or replace into mobileknowledge (check_time, name, rate, cleared, achivement, answer_rate, last_login) 
+                    values (CURRENT_TIMESTAMP, $name, $rate, $cleared, $achivement, $answer_rate, $last_login)`, 
+                          name, rate, cleared, achivement, answer_rate, last_login);
+                  });
+              } catch(err) {
+                  console.log(err);
+              }
+          }
+      }
+    });
+
 
     // フィード
     await Promise.all([
@@ -92,7 +136,7 @@ const dateformat = require("dateformat");
     text += await frame.evaluate(elm => elm.textContent, elms[0]);
     text += "(" + await frame.evaluate(elm => elm.textContent, elms[1]) + ")";
     console.info(text);
-
     browser.close();
+
 
 })();
