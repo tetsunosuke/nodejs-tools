@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/tetsunosuke/nodejs-tools#readme",
   "devDependencies": {
-    "config": "^3.3.1",
+    "config": "^3.3.2",
     "puppeteer": "^4.0.0"
   },
   "dependencies": {
