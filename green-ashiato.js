@@ -147,7 +147,11 @@ const puppeteer = require('puppeteer');
                 if (match[1] ===  value) {
                     selector = `#js-main-contents table>tbody:nth-of-type(${i})>tr>td:nth-of-type(9)>div.mdl-data-table__actions>div>div>ul>li:nth-of-type(${j+1})`;
                     await page.waitForSelector(selector);
+                    console.log("気になるクリック", value);
                     await page.click(selector);
+                    selector =  "#js-main-contents table>tbody:nth-of-type(${i})>tr>td input";
+                    elm = await page.$(selector);
+                    console.log("accountId:" + await (await elm.getProperty("id")).jsonValue());
                     continue;
                 }
             }
