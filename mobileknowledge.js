@@ -82,7 +82,11 @@ const iconv = require('iconv-lite');
     }
     // 今日の日付でリネーム
     const downloadedFileName = csvFolderName + "/" + dateformat(new Date(), 'yyyy-mm-dd') + ".csv";
-    fs.rename(downloadFileName, downloadedFileName, (err) => {});
+    fs.rename(downloadFileName, downloadedFileName, (err) => {
+        if (err) { 
+            console.error(err)
+        }
+    });
 
     // ダウンロードしたファイルの内容をDBへインサート
     const parser = parse();
