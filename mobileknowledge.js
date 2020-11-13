@@ -1,17 +1,66 @@
+/**
+ *  最新データダウンロード
+ *  node mobileknowledge
+ *  日付指定で過去履歴をDcBに
+ *  node mobileknowledge mobileknowledge/2020-01-01.csv
+ */
 const config = require("config");
-let conf = config.get("mobileknowledge");
 const puppeteer = require('puppeteer');
 const contentDisposition = require('content-disposition');
 const fs = require("fs");
 const dateformat = require("dateformat");
-const sqlite3 = require("sqlite3");
 const csvFolderName = "mobileknowledge";
-const parse = require("csv-parse");
+const csv = require("csv-parse");
 const iconv = require('iconv-lite');
+const sqlite3 = require("sqlite3");
+const db = new sqlite3.Database("database.sqlite3")
+const insertDb = ( (db, date, data) => {
+    const [tmp, name, a, b, rate, cleared, achievement, answer_rate, last_login] = data;
+    db.serialize(() => { db.run(`create table if not exists mobileknowledge (
+                    check_date datetime,
+                    name text,
+                    rate number,
+                    cleared number,
+                    achievement number,
+                    answer_rate number,
+                    last_login datetime
+                ,unique(check_date, name))
+            `
+        );
+        db.run(`insert or replace into mobileknowledge (check_date, name, rate, cleared, achievement, answer_rate, last_login)
+                values ($date,$name, $rate, $cleared, $achievement, $answer_rate, $last_login)`,
+                date, name, rate, cleared, achievement, answer_rate, last_login
+        );
+   });
+});
 
+const parseAndInsertDb = ( async (downloadedFileName, date) => {
+    // ダウンロードしたファイルの内容をDBへインサート
+    const parser = csv();
 
+    const rs = fs.createReadStream(downloadedFileName);
+    rs.pipe(iconv.decodeStream('SJIS'))
+      .pipe(iconv.encodeStream('UTF-8'))
+      .pipe(parser);
 
-(async () => {
+    // DBに入れていく
+    parser.on('readable', () => {
+      let data;
+        while (data = parser.read()) {
+            [tmp, name, a,b, rate, cleared, achievement, answer_rate, last_login] = data;
+            if (a === "for Freshers21") {
+                try {
+                    insertDb(db, date, data);
+                } catch(err) {
+                    console.log(err);
+                }
+            }
+        }
+    });
+});
+
+let conf = config.get("mobileknowledge");
+const readByBrowser = (async () => {
     let selector;
     let xpath;
     let elm;
@@ -81,48 +130,17 @@ const iconv = require('iconv-lite');
         await page.waitFor(500);
     }
     // 今日の日付でリネーム
-    const downloadedFileName = csvFolderName + "/" + dateformat(new Date(), 'yyyy-mm-dd') + ".csv";
+    const date = dateformat(new Date(), 'yyyy-mm-dd');
+    const downloadedFileName = csvFolderName + "/" + date + ".csv";
     fs.rename(downloadFileName, downloadedFileName, (err) => {
         if (err) { 
             console.error(err)
         }
     });
 
-    // ダウンロードしたファイルの内容をDBへインサート
-    const parser = parse();
 
-    const rs = fs.createReadStream(downloadedFileName);
-    rs.pipe(iconv.decodeStream('SJIS'))
-      .pipe(iconv.encodeStream('UTF-8'))
-      .pipe(parser);
+    await parseAndInsertDb(downloadedFileName, date);
 
-    // DBに入れていく
-    parser.on('readable', () => {
-      let data;
-      while (data = parser.read()) {
-        [tmp, name, a, ,b, rate, cleared, achivement, answer_rate, last_login] = data;
-          if (a === "for Freshers21") {
-              const db = new sqlite3.Database("mobileknowledge.sqlite3")
-              try {
-                  db.serialize(() => {
-                      db.run(`create table if not exists mobileknowledge (
-                        check_time datetime,
-                        name text,
-                        rate number,
-                        cleared number,
-                        achivement number,
-                        answer_rate number,
-                        last_login datetime)`);
-                      db.run(`insert or replace into mobileknowledge (check_time, name, rate, cleared, achivement, answer_rate, last_login) 
-                    values (CURRENT_TIMESTAMP, $name, $rate, $cleared, $achivement, $answer_rate, $last_login)`, 
-                          name, rate, cleared, achivement, answer_rate, last_login);
-                  });
-              } catch(err) {
-                  console.log(err);
-              }
-          }
-      }
-    });
 
 
     // フィード
@@ -141,6 +159,21 @@ const iconv = require('iconv-lite');
     text += "(" + await frame.evaluate(elm => elm.textContent, elms[1]) + ")";
     console.info(text);
     browser.close();
+});
 
+(async() => {
+    if (process.argv.length > 2) {
+        const filename = process.argv.pop();
+        const date = filename.split("/")[1].split(".")[0];
+        await parseAndInsertDb(filename, date);
+        // 非同期処理は待たずに強制終了
+    } else {
+        await readByBrowser();
+    }
 
+    // TODO: 下記のクエリで得られたデータから各メンバーの進捗グラフを作成
+    // 描画データ作成
+    const query = "select name, check_date, rate, last_login from mobileknowledge order by name, check_date asc";
 })();
+
+
