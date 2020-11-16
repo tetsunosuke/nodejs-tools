@@ -13,7 +13,7 @@ const csvFolderName = "mobileknowledge";
 const csv = require("csv-parse");
 const iconv = require('iconv-lite');
 const sqlite3 = require("sqlite3");
-const db = new sqlite3.Database("database.sqlite3")
+const db = new sqlite3.Database("mobileknowledge/database.sqlite3")
 const insertDb = ( (db, date, data) => {
     const [tmp, name, a, b, rate, cleared, achievement, answer_rate, last_login] = data;
     db.serialize(() => { db.run(`create table if not exists mobileknowledge (
