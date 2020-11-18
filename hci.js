@@ -47,6 +47,12 @@ if (process.argv.length >= 6) {
         c[key] = account[key];
     }
     delete(c[type]);
+    if (!applicantTypeText.match(/新卒|中途/)) {
+        throw("新卒/中途の指定が誤っています");
+    }
+    if (!genderText.match(/[男|女]/)) {
+        throw("男性/女性の指定が誤っています");
+    }
     gender = genderText.match(/男/) ? "1" : "2";
     applicantType = applicantTypeText.match(/新卒/) ? "1" : "2";
 } else {
