@@ -47,16 +47,18 @@ if (process.argv.length >= 6) {
         c[key] = account[key];
     }
     delete(c[type]);
-    if (!applicantTypeText.match(/新卒|中途/)) {
+    if (["新卒", "中途"].indexOf(applicantTypeText) === -1) {
+        console.log(applicantTypeText);
         throw("新卒/中途の指定が誤っています");
     }
     if (!genderText.match(/[男|女]/)) {
+        console.log(genderText);
         throw("男性/女性の指定が誤っています");
     }
     gender = genderText.match(/男/) ? "1" : "2";
     applicantType = applicantTypeText.match(/新卒/) ? "1" : "2";
 } else {
-    throw("オプションを指定してください: node hci task名 氏名 新卒/中途 男性/女性 (YYYY/MM/DD) ");
+    throw("オプションを指定してください: node hci task名 氏名 男性/女性 新卒/中途 (YYYY/MM/DD) ");
 }
 
 // 戻す
