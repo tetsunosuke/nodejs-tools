@@ -4,6 +4,9 @@
 const config = require("config");
 let conf = config.get("hci");
 const puppeteer = require('puppeteer');
+const contentDisposition = require('content-disposition');
+const fs = require("fs");
+var func = "";
 
 let gender;
 let applicantType;
@@ -57,14 +60,25 @@ if (process.argv.length >= 6) {
     }
     gender = genderText.match(/男/) ? "1" : "2";
     applicantType = applicantTypeText.match(/新卒/) ? "1" : "2";
+    func = "create";
+
+} else if(process.argv.length === 4) {
+    var [node, prog, type, applicantName] = process.argv;
+    let account = conf.get(type);
+    for (key in account) {
+        c[key] = account[key];
+    }
+    func = "download";
 } else {
     throw("オプションを指定してください: node hci task名 氏名 男性/女性 新卒/中途 (YYYY/MM/DD) ");
 }
 
+
 // 戻す
 conf = c;
 
-(async () => {
+
+const create = (async () => {
     let selector;
     let xpath;
     let elm;
@@ -155,14 +169,14 @@ conf = c;
     await (await page.$x(xpath))[0].click();
 
     // 数秒待つ
-    await page.waitFor(2000);
+    await page.waitForTimeout(2000);
     // チェックを入れて
     await page.click(".fixed_table tr:nth-of-type(2) td:nth-of-type(1)");
     // 報告書
     await page.click(".both_ends_btn button:nth-of-type(1)")
 
     // 数秒待つ
-    await page.waitFor(2000);
+    await page.waitForTimeout(2000);
     await page.waitForSelector(".confirmation");
     // はい
     selector = ".nonback_alert_before_inspection_sheet .confirmation_btn button:nth-of-type(1)";
@@ -170,7 +184,7 @@ conf = c;
     await page.click(selector);
 
     // 別ページで開いたやつから中身を抜き出す
-    await page.waitFor(2000);
+    await page.waitForTimeout(2000);
     let pages = await browser.pages();
     // 新規ページはpages[1]
     const data = await pages[1].evaluate( (selector) => {
@@ -185,4 +199,109 @@ conf = c;
     data.push(`受検期限は ${yyyy}/${mm}/${dd} です`);
     console.info(data.join("\n"));
     browser.close();
+});
+
+const download = (async () => {
+    let selector;
+    let xpath;
+    let elm;
+    let elms;
+    let title;
+    let pages;
+    const browser = await puppeteer.launch({
+        headless: conf.headless,
+    });
+    const [page] = await browser.pages();
+
+    // ログイン画面を開く
+    await Promise.all([
+        page.waitForNavigation(),
+        page.goto(conf.url),
+    ]);
+
+    // ID, パスワード入力、ログイン
+    await Promise.all([
+        page.waitForSelector("#corporateCode"),
+        page.type("#corporateCode", conf.corporateCode),
+    ]);
+    // 上記が成立したら下記は続けてOK
+    await page.type("#mailAddress", conf.mailAddress);
+    await page.type("#password",    conf.password);
+
+    await Promise.all([
+        page.waitForNavigation(),
+        page.click("input[type=submit]"),
+    ]);
+
+
+    // 採用タスクの指定
+    xpath = `//a[text() = "採用タスクの指定"]`;
+    await page.waitForXPath(xpath);
+    await (await page.$x(xpath))[0].click();
+
+    // 設定で決められたタスクをクリック
+    xpath = `//a[text() = "${conf.task}"]`;
+    await page.waitForXPath(xpath);
+    await (await page.$x(xpath))[0].click();
+
+    // 報告書
+    selector = `a[href$="report"]`;
+    await page.waitForSelector(selector);
+    await page.click(selector);
+
+    await page.waitForSelector("#name");
+    await page.type("#name", applicantName);
+    xpath = `//button[text() = "設定した条件で検索"]`;
+    await page.waitForXPath(xpath);
+    await (await page.$x(xpath))[0].click();
+
+    // 数秒待つ
+    await page.waitForTimeout(2000);
+    // チェックを入れる欄からダウンロード対象のIDを取得
+    selector = ".fixed_table tr:nth-of-type(2) td:nth-of-type(2) input";
+    const checked = await page.$eval(selector, e => e.value);
+    url = `https://apsite.jp/corp/tasks/3609/report/download?checkbox=${checked}`;
+    await page._client.send('Page.setDownloadBehavior', {
+        behavior : 'allow',
+        downloadPath: __dirname
+    });
+    page.on("response", (response) => {
+        const contentType = response.headers()['content-type'];
+        if (contentType === "application/zip") {
+            const header = response.headers()["content-disposition"];
+            const disposition = contentDisposition.parse(header);
+            console.info(`ファイル: ${disposition.parameters.filename} をダウンロードします`);
+        }
+    });
+    // そのURLにリクエストするとファイルが落ちてくるから処理する
+    // dummy
+    await page.goto('https://www.google.co.jp/chrome/', {waitUntil: 'networkidle0'});
+    await page.evaluate((url) => {
+        let body = document.querySelector('body');
+        body.innerHTML = `<a id="puppeteer" href="${url}">VSCode</a>`;
+    }, url);
+    await page.waitForSelector('#puppeteer');
+    await page.click('#puppeteer');
+    let filename = await ((async () => {
+        let filename;
+        while ( ! filename || filename.endsWith('.crdownload')) {
+            filename = fs.readdirSync(__dirname)[0];
+            await page.waitForTimeout(1000);
+        }
+        return filename
+    })());
+    console.info("ダウンロード完了");
+
+
+    browser.close();
+});
+
+(async () => {
+    try {
+        await eval(`${func}()`);
+    } catch(e) {
+        console.error(e);
+    }
+
 })();
+
