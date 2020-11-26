@@ -158,6 +158,7 @@ const readByBrowser = (async () => {
     text += await frame.evaluate(elm => elm.textContent, elms[0]);
     text += "(" + await frame.evaluate(elm => elm.textContent, elms[1]) + ")";
     console.info(text);
+    console.info(`${conf.feedUrl}`);
     browser.close();
 });
 
