@@ -2,3 +2,5 @@ node_modules
 config/default.json5
 
 mobileknowledge
+
+.DS_Store
