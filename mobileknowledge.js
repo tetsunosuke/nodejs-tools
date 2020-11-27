@@ -127,7 +127,7 @@ const readByBrowser = (async () => {
         } catch(err) {
             // console.log(err.code);
         }
-        await page.waitFor(500);
+        await page.waitForTimeout(500);
     }
     // 今日の日付でリネーム
     const date = dateformat(new Date(), 'yyyy-mm-dd');
