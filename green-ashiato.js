@@ -67,38 +67,38 @@ const puppeteer = require('puppeteer');
     await page.click(selector);
     // 下限
     await page.click("#js-over-age");
-    await page.waitFor(1000);
+    await page.waitForTimeout(1000);
     selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(2)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(1)>ul>div>li:nth-of-type(9)";
     await page.click(selector);
-    await page.waitFor(1000);
+    await page.waitForTimeout(1000);
     // 上限
     await page.click("#js-under-age");
-    await page.waitFor(1000);
+    await page.waitForTimeout(1000);
     selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(2)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(2)>ul>div>li:nth-of-type(33)";
     await page.click(selector);
-    await page.waitFor(1000);
+    await page.waitForTimeout(1000);
 
     // 年収 450万円以上
     selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(3)>div>span";
     await page.click(selector);
     await page.click("#js-over-salary");
-    await page.waitFor(1000);
+    await page.waitForTimeout(1000);
     selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(3)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(1)>ul>li:nth-of-type(5)";
     await page.click(selector);
-    await page.waitFor(1000);
+    await page.waitForTimeout(1000);
 
     // 最終アクション日：3日以内
     selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(4)>div>span";
     await page.click(selector);
     selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(4)>div:nth-of-type(2)>ul>li:nth-of-type(2)>span";
     await page.click(selector);
-    await page.waitFor(1000);
+    await page.waitForTimeout(1000);
 
     // その他：職歴文字数：100文字以上
     selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(6)>div>span";
     await page.click(selector);
     await page.click("#js-resume-length");
-    await page.waitFor(2000);
+    await page.waitForTimeout(2000);
     selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(6)>div:nth-of-type(2)>div>div>div:nth-of-type(12)>div>ul>li:nth-of-type(2)";
     await page.click(selector);
     // 閉じるボタン
@@ -106,7 +106,7 @@ const puppeteer = require('puppeteer');
     await page.click(selector);
 
     // 絞り込み検索でそこそこかかるので待つ
-    await page.waitFor(5000);
+    await page.waitForTimeout(5000);
 
     // あしあと：0日前(（〜）」の求人）
     // ↑のように出るので、その求人に紐付けて気になるをしていく
@@ -118,7 +118,7 @@ const puppeteer = require('puppeteer');
     let found = value.split(" ")[2];
     console.info(`${value}件のあしあとがあります`);
     // status のリクエストがかなり重たいので待つ
-    await page.waitFor(30000);
+    await page.waitForTimeout(30000);
 
     // 検索結果の気になるをクリックして該当求人へ紐付けていく
     for (let i=1; i < found-0; i++) {

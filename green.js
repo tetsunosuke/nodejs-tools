@@ -109,7 +109,7 @@ const puppeteer = require('puppeteer');
         // 1 - 1 / 1
         elm = await page.$("#js-react-search-result");
         // ここで数秒待たないと数字が更新されない！
-        await page.waitFor(conf.waitShort);
+        await page.waitForTimeout(conf.waitShort);
         text = await page.evaluate(elm => elm.textContent, elm);
         console.log(text, name, url);
         if (text[0] !== "0") {
@@ -124,7 +124,7 @@ const puppeteer = require('puppeteer');
             await page.waitForXPath(xpath);
             let elementHandleList = await page.$x(xpath);
             await elementHandleList[0].click();
-            await page.waitFor(conf.waitLong);
+            await page.waitForTimeout(conf.waitLong);
         }
     }
 
