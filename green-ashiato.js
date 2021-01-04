@@ -149,7 +149,7 @@ const puppeteer = require('puppeteer');
                     await page.waitForSelector(selector);
                     console.log("気になるクリック", value);
                     await page.click(selector);
-                    selector =  "#js-main-contents table>tbody:nth-of-type(${i})>tr>td input";
+                    selector =  `#js-main-contents table>tbody:nth-of-type(${i})>tr>td input`;
                     elm = await page.$(selector);
                     console.log("accountId:" + await (await elm.getProperty("id")).jsonValue());
                     continue;
