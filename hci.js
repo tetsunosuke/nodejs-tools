@@ -132,6 +132,7 @@ const create = (async () => {
     // examPlace 2:来社を強制
     // examLimit1, 2, 3
     // #btn-normal-submit .btn_registration2
+    await page.waitForTimeout(2000);
     await page.waitForSelector("#applicantName");
     await Promise.all([
         page.type("#applicantName", applicantName),
@@ -248,6 +249,12 @@ const download = (async () => {
     selector = `a[href$="report"]`;
     await page.waitForSelector(selector);
     await page.click(selector);
+    url = await page.url();
+    let match = url.match(/\d+/);
+    if (match === null) {
+        throw ("invalid URL:${url}");
+    }
+    const taskId = match[0];
 
     await page.waitForSelector("#name");
     await page.type("#name", applicantName);
@@ -256,11 +263,11 @@ const download = (async () => {
     await (await page.$x(xpath))[0].click();
 
     // 数秒待つ
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(5000);
     // チェックを入れる欄からダウンロード対象のIDを取得
     selector = ".fixed_table tr:nth-of-type(2) td:nth-of-type(2) input";
     const checked = await page.$eval(selector, e => e.value);
-    url = `https://apsite.jp/corp/tasks/3609/report/download?checkbox=${checked}`;
+    url = `https://apsite.jp/corp/tasks/${taskId}/report/download?checkbox=${checked}`;
     await page._client.send('Page.setDownloadBehavior', {
         behavior : 'allow',
         downloadPath: __dirname
@@ -278,10 +285,13 @@ const download = (async () => {
     await page.goto('https://www.google.co.jp/chrome/', {waitUntil: 'networkidle0'});
     await page.evaluate((url) => {
         let body = document.querySelector('body');
-        body.innerHTML = `<a id="puppeteer" href="${url}">VSCode</a>`;
+        body.innerHTML = `<a id="puppeteer" href="${url}">download link</a>`;
     }, url);
-    await page.waitForSelector('#puppeteer');
-    await page.click('#puppeteer');
+    await Promise.all([
+        page.waitForSelector('#puppeteer'),
+        page.click('#puppeteer')
+    ]);
+    await page.waitForTimeout(5000);
     let filename = await ((async () => {
         let filename;
         while ( ! filename || filename.endsWith('.crdownload')) {
