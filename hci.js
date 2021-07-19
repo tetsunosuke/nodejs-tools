@@ -6,6 +6,9 @@ let conf = config.get("hci");
 const puppeteer = require('puppeteer');
 const contentDisposition = require('content-disposition');
 const fs = require("fs");
+const yauzl = require("yauzl");
+const pdfParser = require('pdf-parse');
+
 var func = "";
 
 let gender;
@@ -292,16 +295,49 @@ const download = (async () => {
         page.click('#puppeteer')
     ]);
     await page.waitForTimeout(5000);
-    let filename = await ((async () => {
+    const dlFilename = await ((async () => {
         let filename;
+        let files;
         while ( ! filename || filename.endsWith('.crdownload')) {
-            filename = fs.readdirSync(__dirname)[0];
-            await page.waitForTimeout(1000);
+            files = fs.readdirSync(__dirname);
+            filename = files[0];
+            await page.waitForTimeout(100);
         }
-        return filename
+
+        // zipファイルの名前を返す
+        return files.filter((file) => file.endsWith(".zip"))[0];
     })());
+    // 解凍して元ファイルを削除
     console.info("ダウンロード完了");
 
+    // zip解凍
+    yauzl.open(dlFilename, {lazyEntries: true}, function(err, zipfile) {
+        if (err) throw err;
+        zipfile.readEntry();
+        zipfile.on("entry", function(entry) {
+            zipfile.openReadStream(entry, function(err, readStream) {
+                if (err) throw err;
+                const writeStream = fs.createWriteStream(entry.fileName);
+                readStream.on("end", function() {
+                    zipfile.readEntry();
+                });
+                readStream.on("error", () => {
+                    writeStream.end();
+                });
+                writeStream.on("finish", () => {
+                    pdfParser(fs.readFileSync(writeStream.path)).then( (data) => {
+                        items = data.text.split("\n");
+                        index = items.indexOf("メンタルヘルスに関して");
+                        console.warn(`メンタルヘルスに関して：${items[index+3]}`);
+                    });
+                });
+                readStream.pipe(writeStream);
+            });
+        });
+    });
+
+    // zip削除
+    fs.unlinkSync(dlFilename);
 
     browser.close();
 });

@@ -64,6 +64,7 @@ const puppeteer = require('puppeteer');
     let indexes = [];
     for (let i=0; i < elms.length; i++) {
         text = await page.evaluate(elm => elm.textContent, elms[i]);
+        // 検索条件から設定に該当するものだけを選択
         if (text.indexOf(conf.search) === 0) {
             indexes.push(i+1);
         }
@@ -127,6 +128,7 @@ const puppeteer = require('puppeteer');
             await page.waitForTimeout(conf.waitLong);
         }
     }
+
 
     browser.close();
 })();
