@@ -24,7 +24,7 @@
     "content-disposition": "^0.5.3",
     "csv": "^5.5.0",
     "csv-writer": "^1.6.0",
-    "dateformat": "^4.5.1",
+    "dateformat": "^5.0.1",
     "encoding-japanese": "^1.0.30",
     "iconv-lite": "^0.6.3",
     "mixme": ">=0.5.1",
