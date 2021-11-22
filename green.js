@@ -21,11 +21,11 @@ const puppeteer = require('puppeteer');
 
     // ID, パスワード入力、ログイン
     await Promise.all([
-        page.waitForSelector("#client_cd"),
-        page.type("#client_cd", conf.userid),
+        page.waitForSelector("input[name='cd']"),
+        page.type("input[name='cd']", conf.userid),
     ]);
     // 上記が成立したら下記は続けてOK
-    await page.type("#client_password", conf.password);
+    await page.type("input[name='password']", conf.password);
 
     await Promise.all([
         page.waitForNavigation(),
@@ -70,6 +70,21 @@ const puppeteer = require('puppeteer');
         }
     }
 
+    // それぞれの検索条件がどの求人に紐付いているかを確認
+    // 設定ボタンを押して探索する
+    let jobs = [];
+    for (let i of indexes) {
+        selector = `div.client-navigation > a:nth-of-type(${i}) > div:nth-of-type(2) > span> i`;
+        await Promise.all([
+            page.waitForSelector(selector),
+            page.click(selector),
+        ]);
+        selector = "#js-select-editSearch-jobOffer";
+        elm = await page.$(selector);
+        text = await page.evaluate(elm => elm.textContent, elm);
+        jobs.push(text.replace("expand_more",""));
+    }
+
     // 気になる送信に関する対象URLを取得
     let urls = [];
     let matches;
@@ -93,6 +108,7 @@ const puppeteer = require('puppeteer');
     }
 
     // 気になるを送信する
+    let conditionIndex  = 0;
     for (let url of urls) {
         await Promise.all([
             page.waitForNavigation(),
@@ -112,7 +128,7 @@ const puppeteer = require('puppeteer');
         // ここで数秒待たないと数字が更新されない！
         await page.waitForTimeout(conf.waitShort);
         text = await page.evaluate(elm => elm.textContent, elm);
-        console.log(text, name, url);
+        console.log(text, name, jobs[conditionIndex], url);
         if (text[0] !== "0") {
             // 全て選択
             selector = "#js-main-contents table tr > td > label";
@@ -120,13 +136,35 @@ const puppeteer = require('puppeteer');
                 page.waitForSelector(selector),
                 page.click(selector)
             ]);
-            // 気になる送信ボタン
-            xpath = '//*[@id="js-main-contents"]/div/table/thead/tr/td[8]/div/div[1]/button';
-            await page.waitForXPath(xpath);
-            let elementHandleList = await page.$x(xpath);
-            await elementHandleList[0].click();
+            // 星ボタン
+            starButton = "#js-main-contents>div>table>thead>tr>td:nth-of-type(8)>div>div:nth-of-type(1)";
+            /*
+            await Promise.all([
+                page.waitForSelector(starButton),
+                page.hover(starButton)
+            ]);
+
+            // その上で出てきたものからどの求人で気になるするか設定
+            selector = starButton + " div ul li";
+            elms = await page.$$(selector);
+            for (let i=0; i < elms.length; i++) {
+                text = await page.evaluate(elm => elm.textContent, elms[i]);
+                // 一旦出力だけ
+                console.log( name, text, jobs[conditionIndex]);
+                if (text === jobs[conditionIndex]) {
+                    console.log("一致する求人発見");
+                    // await page.click(elms[i]);
+                }
+            }
+            */
+            selector = starButton + ">button";
+            await Promise.all([
+                page.waitForSelector(selector),
+                page.click(selector)
+            ]);
             await page.waitForTimeout(conf.waitLong);
         }
+        conditionIndex++;
     }
 
 

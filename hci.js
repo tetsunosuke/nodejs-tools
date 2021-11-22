@@ -11,7 +11,6 @@ const pdfParser = require('pdf-parse');
 
 var func = "";
 
-let gender;
 let applicantType;
 
 const generateYmd = () => {
@@ -43,8 +42,8 @@ for (let key in conf) {
 // オプションがあった場合はconfigの上書き
 
 let [yyyy, mm, dd] = generateYmd();
-if (process.argv.length >= 6) {
-    var [node, prog, type, applicantName, genderText, applicantTypeText, ymd] = process.argv;
+if (process.argv.length >= 5) {
+    var [node, prog, type, applicantName, applicantTypeText, ymd] = process.argv;
     if (typeof ymd !== "undefined") {
         [yyyy, mm, dd]  = separateYmd(ymd);
     }
@@ -57,11 +56,6 @@ if (process.argv.length >= 6) {
         console.log(applicantTypeText);
         throw("新卒/中途の指定が誤っています");
     }
-    if (!genderText.match(/[男|女]/)) {
-        console.log(genderText);
-        throw("男性/女性の指定が誤っています");
-    }
-    gender = genderText.match(/男/) ? "1" : "2";
     applicantType = applicantTypeText.match(/新卒/) ? "1" : "2";
     func = "create";
 
@@ -130,7 +124,6 @@ const create = (async () => {
 
     // いろいろ入力
     // applicantName
-    // gender: 1:男性 2:女性
     // applicantType: 1:新卒, 2:中途
     // examPlace 2:来社を強制
     // examLimit1, 2, 3
@@ -139,7 +132,6 @@ const create = (async () => {
     await page.waitForSelector("#applicantName");
     await Promise.all([
         page.type("#applicantName", applicantName),
-        page.select("#gender", gender),
         page.select("#applicantType", applicantType),
         page.select("#examPlace", "2"),
         page.select("#examLimit1", yyyy),
@@ -149,14 +141,11 @@ const create = (async () => {
     // 登録
     await page.click("#btn-normal-submit .btn_registration2");
     // はい
-    selector = ".nonback_alert .confirmation_btn button:nth-of-type(1)";
-    await page.waitForSelector(selector);
-    await page.click(selector);
-
+    selector = ".confirmation_btn button";
+    await page.evaluate( () => document.getElementById('form').submit());
     // 確認OKのクリック
-    selector = ".nonback_alert_complete .confirmation_btn button:nth-of-type(1)";
-    await page.waitForSelector(selector);
-    await page.click(selector);
+    await page.waitForTimeout(2000);
+    await page.evaluate( () => okAfterSubmitAlert());
 
     // 進捗一覧・変更・削除
     xpath = `//a[text() = "進捗一覧・変更・削除"]`;
