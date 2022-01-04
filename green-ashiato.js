@@ -25,11 +25,12 @@ const puppeteer = require('puppeteer');
 
     // ID, パスワード入力、ログイン
     await Promise.all([
-        page.waitForSelector("#client_cd"),
-        page.type("#client_cd", conf.userid),
+        page.waitForSelector("input[name='cd']"),
+        page.type("input[name='cd']", conf.userid),
     ]);
     // 上記が成立したら下記は続けてOK
-    await page.type("#client_password", conf.password);
+    await page.type("input[name='password']", conf.password);
+
 
     await Promise.all([
         page.waitForNavigation(),
@@ -63,34 +64,36 @@ const puppeteer = require('puppeteer');
     **/
 
     // 年齢： 25〜49
-    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(2)>div>span";
+    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(3)>div>span";
     await page.click(selector);
+    await page.waitForTimeout(2000);
     // 下限
+    await page.waitForSelector("#js-over-age");
     await page.click("#js-over-age");
     await page.waitForTimeout(1000);
-    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(2)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(1)>ul>div>li:nth-of-type(9)";
+    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(3)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(1)>ul>div>li:nth-of-type(9)";
     await page.click(selector);
     await page.waitForTimeout(1000);
     // 上限
     await page.click("#js-under-age");
     await page.waitForTimeout(1000);
-    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(2)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(2)>ul>div>li:nth-of-type(33)";
+    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(3)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(2)>ul>div>li:nth-of-type(33)";
     await page.click(selector);
     await page.waitForTimeout(1000);
 
     // 年収 450万円以上
-    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(3)>div>span";
+    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(4)>div>span";
     await page.click(selector);
     await page.click("#js-over-salary");
     await page.waitForTimeout(1000);
-    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(3)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(1)>ul>li:nth-of-type(5)";
+    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(4)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(1)>ul>li:nth-of-type(5)";
     await page.click(selector);
     await page.waitForTimeout(1000);
 
     // 最終アクション日：3日以内
-    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(4)>div>span";
+    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(5)>div>span";
     await page.click(selector);
-    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(4)>div:nth-of-type(2)>ul>li:nth-of-type(2)>span";
+    selector = "nav.mdl-navigation--selectable-tab>div:nth-of-type(5)>div:nth-of-type(2)>ul>li:nth-of-type(2)>span";
     await page.click(selector);
     await page.waitForTimeout(1000);
 
