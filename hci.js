@@ -297,7 +297,7 @@ const download = (async () => {
         return files.filter((file) => file.endsWith(".zip"))[0];
     })());
     // 解凍して元ファイルを削除
-    console.info("ダウンロード完了");
+    console.info(`ダウンロード完了 ${dlFilename}`);
 
     // zip解凍
     yauzl.open(dlFilename, {lazyEntries: true}, function(err, zipfile) {
@@ -326,7 +326,11 @@ const download = (async () => {
     });
 
     // zip削除
-    fs.unlinkSync(dlFilename);
+    try {
+        fs.unlinkSync(dlFilename);
+    } catch(e) {
+        console.warn(e);
+    }
 
     browser.close();
 });
