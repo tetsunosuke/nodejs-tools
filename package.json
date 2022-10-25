@@ -18,7 +18,7 @@
   "homepage": "https://github.com/tetsunosuke/nodejs-tools#readme",
   "devDependencies": {
     "config": "^3.3.6",
-    "puppeteer": "^10.2.0"
+    "puppeteer": "^19.1.1"
   },
   "dependencies": {
     "content-disposition": "^0.5.3",
