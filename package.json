@@ -27,7 +27,7 @@
     "dateformat": "^4.5.1",
     "encoding-japanese": "^1.0.30",
     "iconv-lite": "^0.6.3",
-    "mixme": ">=0.5.1",
+    "mixme": ">=0.5.5",
     "pdf-parse": "^1.1.1",
     "sqlite3": "^4.2.0",
     "yauzl": "^2.10.0"
